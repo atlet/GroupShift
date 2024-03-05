@@ -12,7 +12,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-function xmldb_local_moodle_local_plugin_upgrade($oldversion){
+function xmldb_local_groupshift_upgrade($oldversion){
     // Upgrade code goes here.
     global $CFG, $DB;
     return true;

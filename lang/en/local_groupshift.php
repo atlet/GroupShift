@@ -10,4 +10,6 @@
  
 defined('MOODLE_INTERNAL') || die();
  
-$string['plugintitle'] = 'This is a complete template example of a local plugin';
+$string['pluginname'] = 'Group shift';
+$string['plugintitle'] = 'Moodle plugin to move users from one group to another (in existing course) based on conditions.';
+$string['menuentry'] = 'Group shift';
