@@ -10,8 +10,10 @@
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 
 $id       = required_param('id', PARAM_INT);
+$filtertype = required_param('filtertype', PARAM_TEXT);
+$badge = optional_param('badge', -1, PARAM_INT);
 
-$urlparams = array('id' => $id);
+$urlparams = array('id' => $id, 'filtertype' => $filtertype, 'badge' => $badge);
 
 $course = $DB->get_record('course', array('id' => $id));
 
@@ -25,7 +27,7 @@ if (!has_any_capability([
     redirect($CFG->wwwroot);
 }
 
-$url = new moodle_url($CFG->wwwroot . '/local/groupshift/index.php', $urlparams);
+$url = new moodle_url($CFG->wwwroot . '/local/groupshift/manage.php', $urlparams);
 
 $coursecontext = context_course::instance($course->id);
 $PAGE->set_context($coursecontext);
@@ -33,29 +35,25 @@ $PAGE->set_pagelayout('course');
 $PAGE->set_url($url);
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $coursecontext)) . ': ' . $hdr);
 navigation_node::override_active_url(
-    new moodle_url('/local/groupshift/index.php', array('id' => $course->id))
+    new moodle_url('/local/groupshift/manage.php', array('id' => $course->id))
 );
 
 // Instantiate the myform form from within the plugin.
-$mform = new \local_groupshift\form\index_form($url->__toString(), ['courseid' => $id]);
+$mform = new \local_groupshift\form\manage_form($url->out(false), ['courseid' => $id, 'filtertype' => $filtertype, 'badge' => $badge]);
 
 // Form processing and displaying is done here.
 if ($mform->is_cancelled()) {
+    $cancelurl = new moodle_url($CFG->wwwroot . '/local/groupshift/index.php', ['id' => $id]);
+    redirect($cancelurl);
     // If there is a cancel element on the form, and it was pressed,
     // then the `is_cancelled()` function will return true.
     // You can handle the cancel operation here.
 } else if ($fromform = $mform->get_data()) {
-    $redirectparams = [
-        'id' => $id,
-        'filtertype' => $fromform->filtertype
-    ];
-
-    if(isset($fromform->badges)) {
-        $redirectparams['badge'] = $fromform->badges;
-    }
-
-    $redirecturl = new moodle_url($CFG->wwwroot . '/local/groupshift/manage.php', $redirectparams);
-    redirect($redirecturl);
+    if ($fromform->fromgroup == $fromform->togroup) {
+        \core\notification::error(get_string('selectdifferentgroups', 'local_groupshift'));    
+    } else {
+        \core\notification::success(get_string('sucesfullymoved', 'local_groupshift'));         
+    }    
     // When the form is submitted, and the data is successfully validated,
     // the `get_data()` function will return the data posted in the form.
 } else {
