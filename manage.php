@@ -7,6 +7,8 @@
  * @doc https://docs.moodle.org/dev/Plugin_files
  */
 
+ use local_groupshift\utils\groupdata;
+
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 
 $id       = required_param('id', PARAM_INT);
@@ -35,11 +37,12 @@ $PAGE->set_pagelayout('course');
 $PAGE->set_url($url);
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $coursecontext)) . ': ' . $hdr);
 navigation_node::override_active_url(
-    new moodle_url('/local/groupshift/manage.php', array('id' => $course->id))
+    $url
 );
 
 // Instantiate the myform form from within the plugin.
 $mform = new \local_groupshift\form\manage_form($url->out(false), ['courseid' => $id, 'filtertype' => $filtertype, 'badge' => $badge]);
+$groupdata = new groupdata();
 
 // Form processing and displaying is done here.
 if ($mform->is_cancelled()) {
@@ -51,8 +54,10 @@ if ($mform->is_cancelled()) {
 } else if ($fromform = $mform->get_data()) {
     if ($fromform->fromgroup == $fromform->togroup) {
         \core\notification::error(get_string('selectdifferentgroups', 'local_groupshift'));    
-    } else {
-        \core\notification::success(get_string('sucesfullymoved', 'local_groupshift'));         
+    } else {        
+        $groupdata->MoveUsers($id, $filtertype, $fromform->fromgroup, $fromform->togroup, $badge);
+        \core\notification::success(get_string('sucesfullymoved', 'local_groupshift'));     
+        redirect($url);    
     }    
     // When the form is submitted, and the data is successfully validated,
     // the `get_data()` function will return the data posted in the form.

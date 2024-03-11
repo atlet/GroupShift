@@ -2,6 +2,8 @@
 
 namespace local_groupshift\utils;
 
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 class groupdata {
@@ -72,10 +74,48 @@ class groupdata {
         return $fromgroups;
     }
 
-    private function getSQL($courseid, $filtertype, $type = 'G', $badge = -1) {
+    private function GetUsers($courseid, $filtertype, $fromgroup, $badge = -1) {
+        global $DB;
+        $allusers = [];
+
+        list($sqlgroup, $sqlnogroup) = $this->getSQL($courseid, $filtertype, $this->TYPE_USER, $badge, $fromgroup);
+
+        if ($fromgroup > 0) {
+            $allusers = $DB->get_records_sql($sqlgroup);        
+        } else {
+            $allusers = $DB->get_records_sql($sqlnogroup);
+        }
+
+        return $allusers;
+    }
+
+    public function MoveUsers($courseid, $filtertype, $fromgroup, $togroup, $badge = -1) {
+        global $DB;
+
+        $allusers = $this->GetUsers($courseid, $filtertype, $fromgroup, $badge);
+
+        foreach ($allusers as $key => $value) {            
+            if ($fromgroup == -1) {
+                $user = new stdClass();
+                $user->groupid = $togroup;
+                $user->userid = $value->id;
+
+                $DB->insert_record('groups_members', $user);
+            } else if ($togroup == -1) {
+                $DB->delete_records('groups_members', ['groupid' => $fromgroup, 'userid' => $value->id]);
+            } else {
+                $user = $DB->get_record('groups_members', ['groupid' => $fromgroup, 'userid' => $value->id]);
+                $user->groupid = $togroup;
+                $DB->update_record('groups_members', $user);
+            }
+        }
+    }
+
+    private function getSQL($courseid, $filtertype, $type = 'G', $badge = -1, $fromgroup = null) {
         $sgroup = '';
         $snogroup = '';
         $groupby = '';
+        $onlygroup = '';
 
         $sqlgroup = '';
         $sqlnogroup = '';
@@ -90,6 +130,10 @@ class groupdata {
             case $this->TYPE_USER:
                 $sgroup = 'DISTINCT u.id';
                 $snogroup = 'DISTINCT u.id';
+
+                if (!is_null($fromgroup) && $fromgroup > 0) {
+                    $onlygroup = "AND m.groupid = {$fromgroup}";
+                }
                 break;
         }
 
@@ -104,7 +148,7 @@ class groupdata {
                         LEFT JOIN {badge_issued} AS bi ON bi.userid = u.id AND bi.badgeid = {$badge}
                         WHERE c.id = {$courseid}
                         AND bi.userid IS NOT NULL
-                        {$groupby}
+                        {$onlygroup} {$groupby}
                     ";
 
                 $sqlnogroup = "
@@ -133,7 +177,7 @@ class groupdata {
                         LEFT JOIN {badge_issued} AS bi ON bi.userid = u.id AND bi.badgeid = {$badge}
                         WHERE c.id = {$courseid}
                         AND bi.userid IS NULL
-                        {$groupby}
+                        {$onlygroup} {$groupby}
                     ";
 
                 $sqlnogroup = "
@@ -159,10 +203,10 @@ class groupdata {
                         JOIN {groups}         AS g ON g.courseid = c.id
                         JOIN {groups_members} AS m ON g.id       = m.groupid
                         JOIN {user}           AS u ON m.userid   = u.id
-                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$badge}
+                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE c.id = {$courseid}
                         AND cc.userid IS NOT NULL
-                        {$groupby}
+                        {$onlygroup} {$groupby}
                     ";
 
                 $sqlnogroup = "
@@ -174,7 +218,7 @@ class groupdata {
                         JOIN {user} AS u ON ue.userid = u.id
                         JOIN {groups} AS g ON g.courseid = c.id
                         LEFT JOIN {groups_members} gm ON gm.userid = u.id
-                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$badge}
+                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE gm.id IS NULL
                         AND cc.userid IS NOT NULL
                         and c.id = {$courseid}
@@ -188,10 +232,10 @@ class groupdata {
                         JOIN {groups}         AS g ON g.courseid = c.id
                         JOIN {groups_members} AS m ON g.id       = m.groupid
                         JOIN {user}           AS u ON m.userid   = u.id
-                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$badge}
+                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE c.id = {$courseid}
                         AND cc.userid IS NULL
-                        {$groupby}
+                        {$onlygroup} {$groupby}
                     ";
 
                 $sqlnogroup = "
@@ -203,7 +247,7 @@ class groupdata {
                         JOIN {user} AS u ON ue.userid = u.id
                         JOIN {groups} AS g ON g.courseid = c.id
                         LEFT JOIN {groups_members} gm ON gm.userid = u.id
-                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$badge}
+                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE gm.id IS NULL
                         AND cc.userid IS NULL
                         and c.id = {$courseid}
