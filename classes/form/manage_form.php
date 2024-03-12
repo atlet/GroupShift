@@ -28,6 +28,13 @@ class manage_form extends \moodleform {
             get_string('managehelp', 'local_groupshift')
         );
 
+        $mform->addElement(
+            'static',
+            'description',
+            get_string('selectedcondition', 'local_groupshift'),
+            $groupdata->SelectedFilterDescription($this->_customdata['filtertype'], $this->_customdata['badge'])
+        );        
+
         $mform->addElement('select', 'fromgroup', get_string('fromgroup', 'local_groupshift'), $fromgroups);
         $mform->addElement('select', 'togroup', get_string('togroup', 'local_groupshift'), $togroups);
 

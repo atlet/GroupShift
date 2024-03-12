@@ -47,8 +47,36 @@ class groupdata {
         return $togroups;
     }
 
+    public function SelectedFilterDescription($filtertype, $badge) {
+        global $DB;
+        $r = '';
+
+        switch ($filtertype) {
+            case $this->FILTER_BA:
+                $r = get_string('badgeachieved', 'local_groupshift');
+                break;
+            case $this->FILTER_BNA:
+                $r = get_string('badgenotachieved', 'local_groupshift');
+                break;
+            case $this->FILTER_SA:
+                $r = get_string('subjectcompleted', 'local_groupshift');
+                break;
+            case $this->FILTER_SNA:
+                $r = get_string('subjectnocompleted', 'local_groupshift');
+                break;
+        }
+
+        if ($badge > -1) {
+            $badge = $DB->get_record('badge', ['id' => $badge]);
+
+            $r = "{$r}: {$badge->name}";
+        }
+
+        return $r;
+    }
+
     public function GetGroupsList($courseid, $filtertype, $type = 'G', $badge = -1) {
-        global $DB;  
+        global $DB;
 
         $fromgroups = [];
 
@@ -75,7 +103,7 @@ class groupdata {
         list($sqlgroup, $sqlnogroup) = $this->getSQL($courseid, $filtertype, $this->TYPE_USER, $badge, $fromgroup);
 
         if ($fromgroup > 0) {
-            $allusers = $DB->get_records_sql($sqlgroup);        
+            $allusers = $DB->get_records_sql($sqlgroup);
         } else {
             $allusers = $DB->get_records_sql($sqlnogroup);
         }
@@ -88,7 +116,7 @@ class groupdata {
 
         $allusers = $this->GetUsers($courseid, $filtertype, $fromgroup, $badge);
 
-        foreach ($allusers as $key => $value) {            
+        foreach ($allusers as $key => $value) {
             if ($fromgroup == -1) {
                 $user = new stdClass();
                 $user->groupid = $togroup;

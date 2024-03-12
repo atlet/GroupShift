@@ -26,3 +26,4 @@ $string['fromgroup'] = 'From group';
 $string['togroup'] = 'To group';
 $string['selectdifferentgroups'] = 'You must select different groups!';
 $string['sucesfullymoved'] = 'All users where sucesfully moved.';
+$string['selectedcondition'] = 'Selected condition';
