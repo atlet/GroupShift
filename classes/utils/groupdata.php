@@ -28,14 +28,12 @@ class groupdata {
 
         $notInGroup = $DB->get_record_sql("
         SELECT count(distinct u.id) nofu
-            FROM {course} AS c
-            left JOIN {enrol} AS en ON en.courseid = c.id
-            left JOIN {user_enrolments} AS ue ON ue.enrolid = en.id            
-            left JOIN {user} AS u ON ue.userid = u.id            
-            LEFT JOIN {groups_members} gm ON u.id = gm.userid            
-            LEFT JOIN {groups} mg on mg.id = gm.groupid and mg.courseid = {$courseid}
-            WHERE            
-            c.id = {$courseid};
+            FROM {user} AS u
+            left JOIN {user_enrolments} AS ue ON ue.userid = u.id        
+            left JOIN {enrol} AS en ON en.id= ue.enrolid 
+            LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
+            WHERE en.courseid = {$courseid}
+            AND gm.id is null;
         ");
 
         $togroups = [];
@@ -149,17 +147,14 @@ class groupdata {
 
                 $sqlnogroup = "
                     SELECT {$snogroup}
-                        FROM {course} AS c
-                        JOIN {enrol} AS en ON en.courseid = c.id
-                        JOIN {user_enrolments} AS ue ON ue.enrolid = en.id
-                        JOIN {role} AS r ON r.id = en.roleid
-                        JOIN {user} AS u ON ue.userid = u.id
-                        JOIN {groups} AS g ON g.courseid = c.id
-                        LEFT JOIN {groups_members} gm ON gm.userid = u.id
-                        LEFT JOIN {badge_issued} AS bi ON bi.userid = u.id AND bi.badgeid = {$badge}
-                        WHERE gm.id IS NULL
-                        AND bi.userid IS NOT NULL
-                        and c.id = {$courseid}
+                    FROM {user} AS u
+                    left JOIN {user_enrolments} AS ue ON ue.userid = u.id        
+                    left JOIN {enrol} AS en ON en.id= ue.enrolid 
+                    LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
+                    LEFT JOIN {badge_issued} AS bi ON bi.userid = u.id AND bi.badgeid = {$badge}
+                    WHERE en.courseid = {$courseid}
+                    AND bi.userid IS NOT NULL
+                    AND gm.id is null;
                     ";
                 break;
 
@@ -178,17 +173,14 @@ class groupdata {
 
                 $sqlnogroup = "
                     SELECT {$snogroup}
-                        FROM {course} AS c
-                        JOIN {enrol} AS en ON en.courseid = c.id
-                        JOIN {user_enrolments} AS ue ON ue.enrolid = en.id
-                        JOIN {role} AS r ON r.id = en.roleid
-                        JOIN {user} AS u ON ue.userid = u.id
-                        JOIN {groups} AS g ON g.courseid = c.id
-                        LEFT JOIN {groups_members} gm ON gm.userid = u.id
+                        FROM {user} AS u
+                        left JOIN {user_enrolments} AS ue ON ue.userid = u.id        
+                        left JOIN {enrol} AS en ON en.id= ue.enrolid 
+                        LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
                         LEFT JOIN {badge_issued} AS bi ON bi.userid = u.id AND bi.badgeid = {$badge}
-                        WHERE gm.id IS NULL
+                        WHERE en.courseid = {$courseid}
                         AND bi.userid IS NULL
-                        and c.id = {$courseid}
+                        AND gm.id is null;
                     ";
                 break;
 
@@ -207,17 +199,14 @@ class groupdata {
 
                 $sqlnogroup = "
                     SELECT {$snogroup}
-                        FROM {course} AS c
-                        JOIN {enrol} AS en ON en.courseid = c.id
-                        JOIN {user_enrolments} AS ue ON ue.enrolid = en.id
-                        JOIN {role} AS r ON r.id = en.roleid
-                        JOIN {user} AS u ON ue.userid = u.id
-                        JOIN {groups} AS g ON g.courseid = c.id
-                        LEFT JOIN {groups_members} gm ON gm.userid = u.id
+                        FROM {user} AS u
+                        left JOIN {user_enrolments} AS ue ON ue.userid = u.id        
+                        left JOIN {enrol} AS en ON en.id= ue.enrolid 
+                        LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
                         LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
-                        WHERE gm.id IS NULL
+                        WHERE en.courseid = {$courseid}
                         AND cc.userid IS NOT NULL
-                        and c.id = {$courseid}
+                        AND gm.id is null;
                     ";
                 break;
 
@@ -236,17 +225,14 @@ class groupdata {
 
                 $sqlnogroup = "
                     SELECT {$snogroup}
-                        FROM {course} AS c
-                        JOIN {enrol} AS en ON en.courseid = c.id
-                        JOIN {user_enrolments} AS ue ON ue.enrolid = en.id
-                        JOIN {role} AS r ON r.id = en.roleid
-                        JOIN {user} AS u ON ue.userid = u.id
-                        JOIN {groups} AS g ON g.courseid = c.id
-                        LEFT JOIN {groups_members} gm ON gm.userid = u.id
+                        FROM {user} AS u
+                        left JOIN {user_enrolments} AS ue ON ue.userid = u.id        
+                        left JOIN {enrol} AS en ON en.id= ue.enrolid 
+                        LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
                         LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
-                        WHERE gm.id IS NULL
+                        WHERE en.courseid = {$courseid}
                         AND cc.userid IS NULL
-                        and c.id = {$courseid}
+                        AND gm.id is null;
                     ";
                 break;
         }
