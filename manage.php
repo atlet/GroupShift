@@ -37,7 +37,7 @@ $PAGE->set_pagelayout('course');
 $PAGE->set_url($url);
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $coursecontext)) . ': ' . $hdr);
 navigation_node::override_active_url(
-    $url
+    new moodle_url('/local/groupshift/index.php', array('id' => $course->id))
 );
 
 // Instantiate the myform form from within the plugin.
