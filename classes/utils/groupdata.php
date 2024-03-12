@@ -20,26 +20,22 @@ class groupdata {
         global $DB;
 
         $allGroups = $DB->get_records_sql("
-        SELECT g.id, g.name AS Groupname, count(u.id) nofu
+        SELECT g.id, g.name AS Groupname, (SELECT COUNT(*) FROM {groups_members} gm WHERE gm.groupid = g.id) nofu
             FROM {course}         AS c
             JOIN {groups}         AS g ON g.courseid = c.id
-            JOIN {groups_members} AS m ON g.id       = m.groupid
-            JOIN {user}           AS u ON m.userid   = u.id
             WHERE c.id = {$courseid}
-            GROUP BY g.id
         ");
 
         $notInGroup = $DB->get_record_sql("
-        SELECT COUNT(DISTINCT u.id) nofu
+        SELECT count(distinct u.id) nofu
             FROM {course} AS c
-            JOIN {enrol} AS en ON en.courseid = c.id
-            JOIN {user_enrolments} AS ue ON ue.enrolid = en.id
-            JOIN {role} AS r ON r.id = en.roleid
-            JOIN {user} AS u ON ue.userid = u.id
-            JOIN {groups} AS g ON g.courseid = c.id
-            LEFT JOIN {groups_members} gm ON gm.userid = u.id
-            WHERE gm.id IS NULL
-            and c.id = {$courseid}
+            left JOIN {enrol} AS en ON en.courseid = c.id
+            left JOIN {user_enrolments} AS ue ON ue.enrolid = en.id            
+            left JOIN {user} AS u ON ue.userid = u.id            
+            LEFT JOIN {groups_members} gm ON u.id = gm.userid            
+            LEFT JOIN {groups} mg on mg.id = gm.groupid and mg.courseid = {$courseid}
+            WHERE            
+            c.id = {$courseid};
         ");
 
         $togroups = [];
