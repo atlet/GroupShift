@@ -62,8 +62,7 @@ if ($mform->is_cancelled()) {
     // This branch is executed if the form is submitted but the data doesn't
     // validate and the form should be redisplayed or on the first display of the form.
 
-    // Set anydefault data (if any).
-    $mform->set_data($toform);    
+    // Set anydefault data (if any).   
 }
 
 $PAGE->set_title($hdr);
