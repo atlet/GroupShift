@@ -222,6 +222,7 @@ class groupdata {
                         LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE c.id = {$courseid}
                         AND cc.userid IS NOT NULL
+                        AND cc.timecompleted IS NOT NULL
                         {$onlygroup} {$groupby}
                     ";
 
@@ -234,6 +235,7 @@ class groupdata {
                         LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE en.courseid = {$courseid}
                         AND cc.userid IS NOT NULL
+                        AND cc.timecompleted IS NOT NULL
                         AND gm.id is null;
                     ";
                 break;
@@ -245,7 +247,7 @@ class groupdata {
                         JOIN {groups}         AS g ON g.courseid = c.id
                         JOIN {groups_members} AS m ON g.id       = m.groupid
                         JOIN {user}           AS u ON m.userid   = u.id
-                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
+                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid} AND cc.timecompleted IS NOT NULL
                         WHERE c.id = {$courseid}
                         AND cc.userid IS NULL
                         {$onlygroup} {$groupby}
@@ -257,9 +259,9 @@ class groupdata {
                         left JOIN {user_enrolments} AS ue ON ue.userid = u.id        
                         left JOIN {enrol} AS en ON en.id= ue.enrolid 
                         LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
-                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
+                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid} AND cc.timecompleted IS NOT NULL
                         WHERE en.courseid = {$courseid}
-                        AND cc.userid IS NULL
+                        AND cc.userid IS NULL                        
                         AND gm.id is null;
                     ";
                 break;
