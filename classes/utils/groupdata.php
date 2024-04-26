@@ -128,12 +128,17 @@ class groupdata {
             } else {
                 $user = $DB->get_record('groups_members', ['groupid' => $fromgroup, 'userid' => $value->id]);
                 $user->groupid = $togroup;
-                $DB->update_record('groups_members', $user);
+                try {
+                    $DB->update_record('groups_members', $user);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }                
             }
         }
     }
 
     private function getSQL($courseid, $filtertype, $type = 'G', $badge = -1, $fromgroup = null) {
+
         $sgroup = '';
         $snogroup = '';
         $groupby = '';
@@ -221,7 +226,6 @@ class groupdata {
                         JOIN {user}           AS u ON m.userid   = u.id
                         LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE c.id = {$courseid}
-                        AND cc.userid IS NOT NULL
                         AND cc.timecompleted IS NOT NULL
                         {$onlygroup} {$groupby}
                     ";
@@ -234,7 +238,6 @@ class groupdata {
                         LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
                         LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid}
                         WHERE en.courseid = {$courseid}
-                        AND cc.userid IS NOT NULL
                         AND cc.timecompleted IS NOT NULL
                         AND gm.id is null;
                     ";
@@ -247,9 +250,9 @@ class groupdata {
                         JOIN {groups}         AS g ON g.courseid = c.id
                         JOIN {groups_members} AS m ON g.id       = m.groupid
                         JOIN {user}           AS u ON m.userid   = u.id
-                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid} AND cc.timecompleted IS NOT NULL
+                        LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = c.id
                         WHERE c.id = {$courseid}
-                        AND cc.userid IS NULL
+                        AND cc.timecompleted IS NULL
                         {$onlygroup} {$groupby}
                     ";
 
@@ -261,7 +264,7 @@ class groupdata {
                         LEFT JOIN {groups_members} gm ON u.id = gm.userid and gm.groupid in (SELECT g.id FROM mdl_groups as g where g.courseid = {$courseid})
                         LEFT JOIN {course_completions} AS cc ON cc.userid = u.id AND cc.course = {$courseid} AND cc.timecompleted IS NOT NULL
                         WHERE en.courseid = {$courseid}
-                        AND cc.userid IS NULL                        
+                        AND cc.timecompleted IS NULL                     
                         AND gm.id is null;
                     ";
                 break;
